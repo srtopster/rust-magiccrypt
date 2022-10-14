@@ -21,7 +21,7 @@ use digest::Digest;
 #[cfg(feature = "std")]
 use block_modes::block_padding::Padding;
 use block_modes::block_padding::Pkcs7;
-use block_modes::{BlockMode, Cbc,BlockModeError};
+use block_modes::{BlockMode, BlockModeError, Cbc};
 
 use aes::cipher::{Block, BlockCipherKey};
 use aes::Aes256;
@@ -213,7 +213,8 @@ impl MagicCryptTrait for MagicCrypt256 {
         writer: &mut dyn Write,
     ) -> Result<(), MagicCryptError>
     where
-        <N as Add<B1>>::Output: ArrayLength<u8>, {
+        <N as Add<B1>>::Output: ArrayLength<u8>,
+    {
         let mut cipher = Aes256Cbc::new_fix(&self.key, &self.iv);
 
         let mut buffer: GenericArray<u8, Add1<N>> = GenericArray::default();
@@ -253,7 +254,9 @@ impl MagicCryptTrait for MagicCrypt256 {
 
                             let unpad = match Pkcs7::unpad(&buffer[..e]) {
                                 Ok(unpad) => unpad,
-                                Err(_) => return Err(MagicCryptError::DecryptError(BlockModeError))
+                                Err(_) => {
+                                    return Err(MagicCryptError::DecryptError(BlockModeError))
+                                }
                             };
                             writer.write_all(unpad)?;
 
